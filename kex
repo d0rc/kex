@@ -8,11 +8,26 @@ my $elixirGit = "https://github.com/elixir-lang/elixir.git";
 my $KEXTMP = $ENV{HOME}."/.kex/";
 system("mkdir $KEXTMP &> /dev/null");
 
-
 my $green = "\e[32m";
 my $yellow = "\e[33m";
 my $cyan = "\e[36m";
 my $normal = "\e[0m";
+
+print $cyan."kex".$normal.", using ".$yellow.getNumCores().$normal." CPU Cores.\n";
+
+sub getNumCores {
+	my $uname = `uname -a`;
+	if ($uname =~ /Darwin/) {
+		my $tmp = `/usr/sbin/system_profiler -detailLevel full SPHardwareDataType | grep 'Cores'`;
+		$tmp =~ s/[^0-9]+//gs;
+		return $tmp;
+	} elsif ($uname =~ /Linux/) {
+		my $tmp = `cat /proc/cpuinfo | grep processor | wc -l`;
+		$tmp =~ s/[^0-9]+//gs;
+		return $tmp;
+	}
+	return 1;
+}
 
 sub usage {
 	print "kex command:\n";
@@ -93,7 +108,7 @@ sub showConfig {
 
 sub buildErlang {
 	my $base = $KEXTMP.getBase($erlangGit);
-	system("cd $base; ./otp_build autoconf; ./configure $ERLOPTS; make clean; make");
+	system("cd $base; ./otp_build autoconf; ./configure $ERLOPTS; make clean; make -j".(1+getNumCores()));
 }
 
 sub buildElixir {
