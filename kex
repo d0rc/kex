@@ -18,7 +18,7 @@ print $cyan."kex".$normal.", using ".$yellow.getNumCores().$normal." CPU Cores.\
 sub getNumCores {
 	my $uname = `uname -a`;
 	if ($uname =~ /Darwin/) {
-		my $tmp = `/usr/sbin/system_profiler -detailLevel full SPHardwareDataType | grep 'Cores'`;
+		my $tmp = `sysctl hw.ncpu`;
 		$tmp =~ s/[^0-9]+//gs;
 		return $tmp;
 	} elsif ($uname =~ /Linux/) {
