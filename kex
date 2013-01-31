@@ -1,0 +1,158 @@
+#!/usr/bin/perl
+use strict;
+use Switch;
+
+my $ERLOPTS = "--enable-smp-support --enable-hipe --enable-threads --with-ssl";
+my $erlangGit = "https://github.com/erlang/otp.git";
+my $elixirGit = "https://github.com/elixir-lang/elixir.git";
+
+my $green = "\e[32m";
+my $yellow = "\e[33m";
+my $cyan = "\e[36m";
+my $normal = "\e[0m";
+
+sub usage {
+	print "kex command:\n";
+	print "\tlist [installed] erlang|elixir|all        - lists available releases to install\n";
+	#print "\tswitch erlang|elixir release  - switch to given release\n";
+	print "\tbuild erlang|elixir release [install] - download, build, install selected release\n";
+}
+
+sub getBase {
+	my $git = @_[0];
+	my ($base) = ($git =~ /\/([_0-9a-zA-Z]+)\.git$/);
+	return $base;
+}
+
+sub getClone {
+	my $git = @_[0];
+	print "Git cloning/fetching $green'$git'$normal\n";
+	my $base = getBase($git);
+	print "Base directory $yellow$base$normal\n";
+	unless (-d "github/$base") {
+		system("mkdir github &> /dev/null; cd github; rm -rf $base; git clone $git");
+	} else {
+		system("cd github/$base; git fetch --tags");
+	}
+}
+
+sub gitCheckout {
+	my $git = @_[0];
+	my $base = getBase($git);
+	my $release = @_[1];
+	my @releases = getReleases($git, $ARGV[2]);
+	my %map = map {$_ => 1} @releases;
+	if (defined($map{$release})) {
+		print "Release found!\n";
+		system("cd github/$base; git checkout $release;");
+		system("cd github/$base; git pull origin master;") if ($release eq "master");
+		return 1;
+	} else {
+		print "Release you're asking for - not found\n";					
+		return 0;
+	}
+}
+
+sub getReleases {
+	my $git = @_[0];
+	my $base = getBase($git);
+	my @releases;
+	if (open(TAGS, "(cd github/$base/; git tag -l; echo master) |")) {
+		while(<TAGS>) {
+			chomp($_);
+			my $release = $_;
+			my $flag = ($release eq @_[1])?"$green * $normal":"";
+			print "Release: $cyan".$release."$normal$flag\n";
+			push @releases, $release;
+		}
+		close(TAGS);
+	}
+	return @releases;
+}
+
+sub getErlangAvailable() {
+	getClone($erlangGit);
+	getReleases($erlangGit)
+}
+sub getElixirAvailable() {
+	getClone($elixirGit);
+	getReleases($elixirGit);
+}
+
+sub showConfig {
+	my $git = @_[0];
+	my $path = `pwd`."/github/".getBase($git)."/bin/";
+	$path =~ s/\n//gs;
+	print "Release you're asking for is at $cyan$path$normal, enjoy! \n";
+	print "To try it right now: $yellow export PATH=$path:\$PATH $normal\n";
+}
+
+sub buildErlang {
+	my $base = "github/".getBase($erlangGit);
+	system("cd $base; ./otp_build autoconf; ./configure $ERLOPTS; make clean; make");
+}
+
+sub buildElixir {
+	my $base = "github/".getBase($elixirGit);
+	system(" cd $base; make clean; make");
+}
+
+sub list_erlang {
+	my @erlangList = getErlangAvailable();
+}
+sub list_elixir {
+	my @elixirList = getElixirAvailable();
+}
+
+unless(defined($ARGV[0])) {
+	usage();
+} elsif ($ARGV[0] eq "list") {
+	switch ($ARGV[1]) {
+		case "erlang" { 
+			list_erlang();
+		}
+		case "elixir" {
+			list_elixir();
+		}
+		case "all" {
+			list_erlang();
+			list_elixir();
+		}
+		case "installed" {
+			print "Not implemented yet\n";
+		}
+		case undef {
+			list_erlang();
+			list_elixir();
+		}
+		else {
+			print "Don't know how to list ".$ARGV[1]."\n";
+		}
+	}
+} elsif ($ARGV[0] eq "switch") {
+
+} elsif ($ARGV[0] eq "build") {
+	if (defined($ARGV[2])) {
+		switch ($ARGV[1]) {
+			case "erlang" {
+				if (gitCheckout($erlangGit, $ARGV[2])) {
+					buildErlang();
+					showConfig($erlangGit);
+				}
+			}
+			case "elixir" {
+				if (gitCheckout($elixirGit, $ARGV[2])) {
+					buildElixir();
+					showConfig($elixirGit);				
+				}
+			}
+			else {
+				print "Don't know what package to you want me to build\n";
+			}
+		}
+	} else {
+		print "Don't know what release to build\n";
+	}
+} else {
+	usage();
+}
