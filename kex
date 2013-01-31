@@ -5,6 +5,9 @@ use Switch;
 my $ERLOPTS = "--enable-smp-support --enable-hipe --enable-threads --with-ssl";
 my $erlangGit = "https://github.com/erlang/otp.git";
 my $elixirGit = "https://github.com/elixir-lang/elixir.git";
+my $KEXTMP = $ENV{HOME}."/.kex/";
+system("mkdir $KEXTMP &> /dev/null");
+
 
 my $green = "\e[32m";
 my $yellow = "\e[33m";
@@ -29,10 +32,11 @@ sub getClone {
 	print "Git cloning/fetching $green'$git'$normal\n";
 	my $base = getBase($git);
 	print "Base directory $yellow$base$normal\n";
-	unless (-d "github/$base") {
-		system("mkdir github &> /dev/null; cd github; rm -rf $base; git clone $git");
+	unless (-d "$KEXTMP$base") {
+		print "Not found "."$KEXTMP$base\n";
+		system("mkdir $KEXTMP &> /dev/null; cd $KEXTMP; rm -rf $base; git clone $git");
 	} else {
-		system("cd github/$base; git fetch --tags");
+		system("cd $KEXTMP$base; git fetch --tags");
 	}
 }
 
@@ -44,8 +48,8 @@ sub gitCheckout {
 	my %map = map {$_ => 1} @releases;
 	if (defined($map{$release})) {
 		print "Release found!\n";
-		system("cd github/$base; git checkout $release;");
-		system("cd github/$base; git pull origin master;") if ($release eq "master");
+		system("cd $KEXTMP$base; git checkout $release;");
+		system("cd $KEXTMP$base; git pull origin master;") if ($release eq "master");
 		return 1;
 	} else {
 		print "Release you're asking for - not found\n";					
@@ -57,7 +61,7 @@ sub getReleases {
 	my $git = @_[0];
 	my $base = getBase($git);
 	my @releases;
-	if (open(TAGS, "(cd github/$base/; git tag -l; echo master) |")) {
+	if (open(TAGS, "(cd $KEXTMP$base/; git tag -l; echo master) |")) {
 		while(<TAGS>) {
 			chomp($_);
 			my $release = $_;
@@ -81,19 +85,19 @@ sub getElixirAvailable() {
 
 sub showConfig {
 	my $git = @_[0];
-	my $path = `pwd`."/github/".getBase($git)."/bin/";
+	my $path = $KEXTMP.getBase($git)."/bin/";
 	$path =~ s/\n//gs;
 	print "Release you're asking for is at $cyan$path$normal, enjoy! \n";
 	print "To try it right now: $yellow export PATH=$path:\$PATH $normal\n";
 }
 
 sub buildErlang {
-	my $base = "github/".getBase($erlangGit);
+	my $base = $KEXTMP.getBase($erlangGit);
 	system("cd $base; ./otp_build autoconf; ./configure $ERLOPTS; make clean; make");
 }
 
 sub buildElixir {
-	my $base = "github/".getBase($elixirGit);
+	my $base = $KEXTMP.getBase($elixirGit);
 	system(" cd $base; make clean; make");
 }
 
