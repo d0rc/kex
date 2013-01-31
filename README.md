@@ -1,7 +1,3 @@
-kex - tool to build any tagged release of Erlang/OTP or Elixir from git
-=======================================================================
-
-
 Usage
 ----
 kex command
