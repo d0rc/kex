@@ -2,7 +2,7 @@
 use strict;
 use Switch;
 
-my $ERLOPTS = "--enable-smp-support --enable-hipe --enable-threads --with-ssl --enable-darwin-64bit";
+my $ERLOPTS = "--enable-smp-support --enable-hipe --enable-threads --with-ssl --enable-darwin-64bit --enable-m64-build";
 my $erlangGit = "https://github.com/erlang/otp.git";
 my $elixirGit = "https://github.com/elixir-lang/elixir.git";
 my $KEXTMP = $ENV{HOME}."/.kex/";
@@ -109,7 +109,7 @@ sub showConfig {
 
 sub buildErlang {
 	my $base = $KEXTMP.getBase($erlangGit);
-	system("cd $base; ./otp_build autoconf; ./configure $ERLOPTS; make clean; make -j".(1+getNumCores()));
+	system("cd $base; ./otp_build autoconf; ./configure $ERLOPTS; make clean; find . -name \*.o -exec rm -vf {} \;; make -j".(1+getNumCores()));
 }
 
 sub buildElixir {
