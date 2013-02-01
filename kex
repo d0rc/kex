@@ -148,6 +148,9 @@ unless(defined($ARGV[0])) {
 			print "Don't know how to list ".$ARGV[1]."\n";
 		}
 	}
+} elsif ($ARGV[0] eq "config") {
+	showConfig($erlangGit);
+	showConfig($elixirGit);
 } elsif ($ARGV[0] eq "switch") {
 
 } elsif ($ARGV[0] eq "build") {
