@@ -31,9 +31,10 @@ sub getNumCores {
 
 sub usage {
 	print "kex command:\n";
+	print "\tconfig 								   - show default PATH configuration\n";
 	print "\tlist [installed] erlang|elixir|all        - lists available releases to install\n";
 	#print "\tswitch erlang|elixir release  - switch to given release\n";
-	print "\tbuild erlang|elixir release [install] - download, build, install selected release\n";
+	print "\tbuild erlang|elixir release [install]     - download, build, install selected release\n";
 }
 
 sub getBase {
