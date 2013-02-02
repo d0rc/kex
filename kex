@@ -109,7 +109,7 @@ sub showConfig {
 
 sub buildErlang {
 	my $base = $KEXTMP.getBase($erlangGit);
-	system("cd $base; ./otp_build autoconf; ./configure $ERLOPTS; make clean; find . -name \*.o -exec rm -vf {} \;; make -j".(1+getNumCores()));
+	system("cd $base; ./otp_build autoconf; ./configure $ERLOPTS; make clean; find . -name \*.o -exec rm -vf {} \\;; make -j".(1+getNumCores()));
 }
 
 sub buildElixir {
