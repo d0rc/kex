@@ -2,7 +2,7 @@
 use strict;
 use Switch;
 
-my $ERLOPTS = "--enable-smp-support --enable-hipe --enable-threads --with-ssl --enable-darwin-64bit --enable-m64-build";
+my $ERLOPTS = "--enable-smp-support --enable-hipe --enable-threads --with-ssl --enable-m64-build";
 my $erlangGit = "https://github.com/erlang/otp.git";
 my $elixirGit = "https://github.com/elixir-lang/elixir.git";
 my $KEXTMP = $ENV{HOME}."/.kex/";
@@ -20,7 +20,8 @@ sub getNumCores {
 	if ($uname =~ /Darwin/) {
 		my $tmp = `sysctl hw.ncpu`;
 		$tmp =~ s/[^0-9]+//gs;
-		return $tmp;
+		$ERLOPTS .= " --enable-darwin-64bit ";
+    return $tmp;
 	} elsif ($uname =~ /Linux/) {
 		my $tmp = `cat /proc/cpuinfo | grep processor | wc -l`;
 		$tmp =~ s/[^0-9]+//gs;
